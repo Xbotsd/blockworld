@@ -49,7 +49,7 @@ First public release.
   layers, verdict cards, edit log and sensitivity table, plus a six-panel
   before/after PNG.
 - **CLI** (`cli.py`): `blockworld demo`, `blockworld study`, `blockworld template`.
-- **Tests**: 65 tests, including validation against closed-form bearing factors,
+- **Tests**: 69 tests, including validation against closed-form bearing factors,
   Budyko bounds, allometric scaling, IO round-trips and refusal behaviour.
 
 ### Notes
