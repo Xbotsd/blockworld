@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 
 from . import demo, io, uncertainty
@@ -113,6 +114,13 @@ def cmd_template(args) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
+    # Windows 控制台默认不是 UTF-8，帮助文本里的中文会抛 UnicodeEncodeError
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8", errors="replace")
+        except (AttributeError, OSError):
+            pass
+
     ap = argparse.ArgumentParser("blockworld", description="区块化地质—生态沙盘")
     sub = ap.add_subparsers(dest="cmd")
 

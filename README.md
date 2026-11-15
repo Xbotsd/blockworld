@@ -1,4 +1,4 @@
-# blockworld
+﻿# blockworld
 
 [![CI](https://github.com/Xbotsd/blockworld/actions/workflows/ci.yml/badge.svg)](https://github.com/Xbotsd/blockworld/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -58,7 +58,7 @@ pip install -e .
 blockworld template data/site                          # editable dataset
 blockworld study examples/study_landing.json --out out_study --mc 60 --morris 6
 blockworld demo --out out                              # 48×48 site, ~13 s
-python -m unittest discover -s tests                   # 65 tests
+python -m unittest discover -s tests                   # 69 tests
 ```
 
 ## What it does and does not claim
@@ -149,7 +149,7 @@ it.
 src/blockworld/     site · io · geology · materials · world · edits
                     hydrology · vegetation · animals · verifiers
                     solvers · api · uncertainty · report · cli
-tests/              65 tests (closed-form checks, IO contracts, refusal behaviour)
+tests/              69 tests (closed-form checks, IO contracts, refusal behaviour)
 data/site/          editable template dataset
 examples/           study configuration
 docs/               GUIDE · ARCHITECTURE · PROVENANCE · 使用说明
