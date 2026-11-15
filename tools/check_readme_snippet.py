@@ -1,4 +1,4 @@
-﻿"""README 里的示例，逐字跑一遍（防止文档漂移）。"""
+"""README 里的示例，逐字跑一遍（防止文档漂移）。"""
 import os
 import sys
 from pathlib import Path

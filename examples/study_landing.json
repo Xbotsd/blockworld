@@ -1,5 +1,5 @@
 {
-  "site": "..\\data\\site\\site.json",
+  "site": "../data/site/site.json",
   "spin_years": 0,
   "seed": 1,
   "criteria": {

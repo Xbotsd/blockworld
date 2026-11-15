@@ -41,7 +41,7 @@ def load_site(path: str | Path) -> SiteSpec:
     path = Path(path)
     if not path.exists():
         raise SiteFormatError(f"找不到场地文件：{path}")
-    doc = json.loads(path.read_text(encoding="utf-8"))
+    doc = json.loads(path.read_text(encoding="utf-8-sig"))
     base = path.parent
 
     grid_doc = doc.get("grid")

@@ -47,7 +47,7 @@ def cmd_demo(args) -> int:
 
 def cmd_study(args) -> int:
     cfg_path = Path(args.config)
-    cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
+    cfg = json.loads(cfg_path.read_text(encoding="utf-8-sig"))
     base = cfg_path.parent
 
     site_path = Path(cfg["site"])
