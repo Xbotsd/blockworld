@@ -1,0 +1,34 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "blockworld: a block-level geology-ecology sandbox for feasibility decisions"
+type: software
+authors:
+  - family-names: Xu
+    given-names: Yudong
+    affiliation: "School of Mechanical Engineering, Heilongjiang University of Science and Technology, Harbin 150022, China"
+    orcid: "https://orcid.org/0009-0002-3231-0444"
+    email: 3468858545@qq.com
+url: "https://github.com/Xbotsd/blockworld"
+repository-code: "https://github.com/Xbotsd/blockworld"
+version: 0.1.0
+date-released: 2026-11-15
+license: MIT
+keywords:
+  - geotechnical engineering
+  - bearing capacity
+  - sensitivity analysis
+  - monte carlo
+  - morris screening
+  - decision support
+  - reproducibility
+abstract: >-
+  A sandbox in which a site (DEM, boreholes, climate, vegetation) is discretised
+  into blocks, each holding a replaceable layered column, and in which an
+  engineering or management intervention is applied and scored against explicit
+  feasibility criteria (bearing capacity, settlement, slope stability, lander
+  footpad capacity, ecological sustainability). The point is not to predict one
+  site but to answer whether replacing a component flips the verdict, and how
+  stable that answer is under uncertain inputs. Deterministic solvers are
+  replaceable through a registry, and uncertainty is reported as a probability
+  of failure (Monte Carlo) and a screening ranking (Morris), not as a single
+  factor of safety.

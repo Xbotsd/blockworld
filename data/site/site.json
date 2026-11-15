@@ -1,0 +1,27 @@
+{
+ "grid": {
+  "nx": 8,
+  "ny": 8,
+  "cell": 100.0,
+  "x0": 0,
+  "y0": 0
+ },
+ "gravity": 9.81,
+ "seed": 1,
+ "elevation": {
+  "csv": "dem.csv"
+ },
+ "temp": {
+  "csv": "temp.csv"
+ },
+ "precip": {
+  "csv": "precip.csv"
+ },
+ "boreholes": {
+  "csv": "boreholes.csv"
+ },
+ "provenance": {
+  "source": "template",
+  "note": "用真实数据替换 CSV 即可"
+ }
+}

@@ -1,0 +1,22 @@
+# generated outputs
+out/
+out_study/
+out_smoke/
+out_probe/
+
+# python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.venv/
+venv/
+
+# editors / os
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
+*.shot.png

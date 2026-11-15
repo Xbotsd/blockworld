@@ -1,0 +1,13 @@
+x,y,ground,top,bottom,material,source
+200.0,200.0,20.0,0.0,1.0,silt,survey
+200.0,200.0,20.0,1.0,4.0,clay_soft,survey
+200.0,200.0,20.0,4.0,9.0,sand_dense,survey
+200.0,600.0,20.0,0.0,1.0,silt,survey
+200.0,600.0,20.0,1.0,4.0,clay_soft,survey
+200.0,600.0,20.0,4.0,9.0,sand_dense,survey
+600.0,200.0,20.0,0.0,1.0,silt,survey
+600.0,200.0,20.0,1.0,4.0,clay_soft,survey
+600.0,200.0,20.0,4.0,9.0,sand_dense,survey
+600.0,600.0,20.0,0.0,1.0,silt,survey
+600.0,600.0,20.0,1.0,4.0,clay_soft,survey
+600.0,600.0,20.0,4.0,9.0,sand_dense,survey

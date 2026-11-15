@@ -1,0 +1,34 @@
+{
+  "title": "blockworld: a block-level geology-ecology sandbox for feasibility decisions",
+  "description": "<p>A sandbox in which a site is discretised into blocks, each holding a replaceable layered geological column, and an intervention (ground replacement, dewatering, vegetation change, local gravity) is scored against explicit feasibility criteria: bearing capacity, settlement, slope stability, lander footpad capacity and ecological sustainability.</p><p>The package is organised around one question: does replacing a component flip the verdict, and how stable is that answer under uncertain inputs? A <code>Study</code> takes a site (DEM, boreholes, climate), a criteria set and a list of serialisable interventions, and returns per-criterion verdicts with normalised margins plus the flips induced by each intervention.</p><p>Deterministic formulas are replaceable through a registry, so an external numerical model (PLAXIS, FLAC3D) can supply the bearing capacity or the whole verifier without touching the rest of the pipeline. Uncertainty is reported as a probability of failure from Monte Carlo sampling and as a Morris elementary-effects screening ranking, rather than as a single factor of safety.</p><p>Contents: the <code>blockworld</code> Python package (site, geology, materials, hydrology, vegetation, animals, verifiers, edits, study API, uncertainty, reports, CLI), 65 tests, a data template, an example study configuration, and the scripts that regenerate every figure. All physical formulas are cited in the documentation; the parameters of the ecological and hydrological processes are explicitly order-of-magnitude settings and are labelled as such, and synthetic sites are marked <code>synthetic</code> in provenance so they are never presented as measurements.</p>",
+  "creators": [
+    {
+      "name": "Xu, Yudong",
+      "affiliation": "School of Mechanical Engineering, Heilongjiang University of Science and Technology, Harbin 150022, China",
+      "orcid": "0009-0002-3231-0444"
+    }
+  ],
+  "keywords": [
+    "geotechnical engineering",
+    "bearing capacity",
+    "slope stability",
+    "geological modelling",
+    "sensitivity analysis",
+    "monte carlo",
+    "morris screening",
+    "decision support",
+    "reproducibility"
+  ],
+  "license": "MIT",
+  "upload_type": "software",
+  "access_right": "open",
+  "version": "0.1.0",
+  "publication_date": "2026-11-15",
+  "related_identifiers": [
+    {
+      "identifier": "https://github.com/Xbotsd/blockworld",
+      "relation": "isSupplementTo",
+      "scheme": "url"
+    }
+  ]
+}
