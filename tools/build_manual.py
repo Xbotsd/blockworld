@@ -194,7 +194,13 @@ def build() -> Path:
 
         m = re.match(r"^(\d+)\.\s+(.*)$", stripped)
         if m:
-            p = doc.add_paragraph(style="List Number")
+            # 不用 List Number 样式：Word 里它会让编号跨列表连续（1,2,3…6,7）
+            p = doc.add_paragraph()
+            p.paragraph_format.left_indent = Cm(0.75)
+            p.paragraph_format.first_line_indent = Cm(-0.75)
+            p.paragraph_format.space_after = Pt(2)
+            run = p.add_run(f"{m.group(1)}. ")
+            set_cjk(run)
             add_rich_text(p, m.group(2))
             i += 1
             continue
