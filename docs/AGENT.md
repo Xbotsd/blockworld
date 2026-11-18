@@ -60,7 +60,33 @@ blockworld agent --backend none                                # 强制走确定
 blockworld agent --list-models                                 # 看看本机装了什么
 ```
 
-## Offline backends
+## No platform dependency
+
+There is no vendor SDK, no account, no cloud endpoint and no API-key flow in the
+code path. A client is an HTTP POST to a URL you choose:
+
+* speaks the Ollama protocol → `--backend ollama`;
+* speaks the OpenAI chat-completions shape (llama.cpp, vLLM, LM Studio, SGLang,
+  text-generation-webui, a 30-line Flask shim) → `--backend openai`;
+* speaks something else → implement `LLMClient` (`available()` + `chat()`) and
+  `register_client("yours", Factory)`. That is the whole contract.
+
+Configuration can come from the environment, so a deployment needs no code change:
+
+```bash
+export BLOCKWORLD_LLM_BACKEND=openai
+export BLOCKWORLD_LLM_BASE_URL=http://10.0.0.5:8080/v1
+export BLOCKWORLD_LLM_MODEL=local-7b
+export BLOCKWORLD_LLM_API_KEY=offline          # most local servers ignore it
+export BLOCKWORLD_LLM_TIMEOUT=120
+blockworld agent --out out_agent                # flags still override env
+```
+
+Precedence: command-line flag → environment variable → built-in default. Nothing
+is contacted unless `available()` succeeds, and every failure path is a local
+fallback.
+
+## Backends
 
 | backend | endpoint | notes |
 |---|---|---|

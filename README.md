@@ -137,6 +137,11 @@ The facts pack carries verdicts, margins, coverage, the tick trace and the model
 error before/after — no raw measurement streams, so a 7B model on a laptop can
 hold it.
 
+**No platform dependency.** The client is a plain HTTP POST from the standard
+library: point it at any Ollama or OpenAI-compatible endpoint, or set
+`BLOCKWORLD_LLM_BACKEND` / `_BASE_URL` / `_MODEL` / `_API_KEY` / `_TIMEOUT` and
+change no code. There is no vendor SDK, account, or cloud call in the path.
+
 ## What it does and does not claim
 
 | | |

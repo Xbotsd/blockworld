@@ -4,6 +4,33 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1] — 2026-11-18
+
+Platform-independent LLM configuration, and a Chinese manual.
+
+### Added
+
+- **Environment configuration** for the advisor, so a deployment needs no code
+  change: `BLOCKWORLD_LLM_BACKEND`, `_BASE_URL`, `_MODEL`, `_API_KEY`,
+  `_TIMEOUT`. Precedence is flag → environment → default.
+- **`--api-key`** for local servers that require a bearer token.
+- **`docs/手册.md`** and **`docs/BLOCKWORLD-中文手册.docx`**: a 14-section Chinese
+  manual (quick start, data contract, study API, uncertainty, robot loop, offline
+  advisor, formulas, outputs, troubleshooting, provenance, extension points).
+- **`tools/build_manual.py`** renders the Markdown manual to DOCX.
+- **`tools/build_release.py`** produces the source archive.
+
+### Changed
+
+- `describe()` now reports `platform: "direct-http (no vendor SDK)"`, and the CLI
+  prints it, so "no platform dependency" is visible at run time rather than only
+  in the docs.
+- `--list-models` also prints the resolved model and backend.
+
+### Tests
+
+2 new tests (115 total): environment-variable resolution and flag precedence.
+
 ## [0.3.0] — 2026-11-18
 
 Offline advisor: a locally deployed model explains the loop without being able to

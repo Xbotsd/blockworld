@@ -12,6 +12,7 @@ __pycache__/
 *.egg-info/
 build/
 dist/
+dist/
 .pytest_cache/
 .venv/
 venv/
@@ -22,3 +23,6 @@ venv/
 Thumbs.db
 desktop.ini
 *.shot.png
+
+# office render scratch
+.dsh-office-*/

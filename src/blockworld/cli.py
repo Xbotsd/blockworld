@@ -149,14 +149,24 @@ def cmd_agent(args) -> int:
     from .agent import Advisor, Facts, describe, make_client, render_brief
     from .robot.demo import make_scenario
 
-    client = make_client(args.backend, model=args.model, base_url=args.base_url,
-                         timeout=args.timeout)
+    kwargs: dict = {}
+    if args.model:
+        kwargs["model"] = args.model
+    if args.base_url:
+        kwargs["base_url"] = args.base_url
+    if args.api_key:
+        kwargs["api_key"] = args.api_key
+    if args.timeout is not None:
+        kwargs["timeout"] = args.timeout
+    client = make_client(args.backend, **kwargs)
     info = describe(client)
 
     if args.list_models:
         models = client.models() if hasattr(client, "models") else []
-        print(json.dumps({"backend": info["backend"], "available": info["available"],
-                          "models": models}, ensure_ascii=False, indent=2))
+        print(json.dumps({"backend": info["backend"], "model": info["model"],
+                          "available": info["available"], "models": models,
+                          "platform": info["platform"]},
+                         ensure_ascii=False, indent=2))
         return 0
 
     sc = make_scenario(seed=args.seed, session_seed=args.session_seed,
@@ -172,12 +182,14 @@ def cmd_agent(args) -> int:
         json.dumps(report.to_dict(), ensure_ascii=False, indent=2), encoding="utf-8")
     payload = advice.to_dict()
     payload["policy_action"] = facts.final.get("action")
+    payload["backend"] = info
     (out / "agent_advice.json").write_text(
         json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
     (out / "agent_brief.md").write_text(
         render_brief(facts, advice), encoding="utf-8")
 
-    print(f"后端：{info['backend']}/{info['model']}　可用：{info['available']}")
+    print(f"后端：{info['backend']}/{info['model']}　可用：{info['available']}"
+          f"　接入方式：{info['platform']}")
     print(f"确定性判定：{facts.final.get('action')}　顾问来源：{advice.source}")
     if advice.verdict and advice.verdict != facts.final.get("action"):
         print(f"注意：模型意见 {advice.verdict} 与策略不一致，以策略为准")
@@ -237,10 +249,17 @@ def main(argv: list[str] | None = None) -> int:
 
     a = sub.add_parser("agent", help="离线顾问：本地模型解释闭环结果（不参与判定）")
     a.add_argument("--out", default="out_agent")
-    a.add_argument("--backend", default="ollama", choices=["ollama", "openai", "none"])
-    a.add_argument("--model", default="qwen2.5:7b")
-    a.add_argument("--base-url", default="http://127.0.0.1:11434")
-    a.add_argument("--timeout", type=float, default=90.0)
+    a.add_argument("--backend", default=None,
+                   choices=["ollama", "openai", "none"],
+                   help="默认读 BLOCKWORLD_LLM_BACKEND，否则 ollama")
+    a.add_argument("--model", default=None,
+                   help="默认读 BLOCKWORLD_LLM_MODEL")
+    a.add_argument("--base-url", default=None,
+                   help="默认读 BLOCKWORLD_LLM_BASE_URL；任意兼容端点均可")
+    a.add_argument("--api-key", default=None,
+                   help="默认读 BLOCKWORLD_LLM_API_KEY；本地端点通常随便填")
+    a.add_argument("--timeout", type=float, default=None,
+                   help="默认读 BLOCKWORLD_LLM_TIMEOUT，否则 90 秒")
     a.add_argument("--ticks", type=int, default=12)
     a.add_argument("--seed", type=int, default=5)
     a.add_argument("--session-seed", type=int, default=3)

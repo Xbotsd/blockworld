@@ -33,7 +33,7 @@ from .api import Criteria, Intervention, Study, StudyResult
 from .site import GridSpec, SiteSpec, build_from, synthesize
 from .world import Cohort, Region, Tile, World, WorldConfig, build
 
-__version__ = "0.3.0"
+__version__ = "0.3.1"
 
 __all__ = [
     "SiteSpec", "GridSpec", "build_from", "synthesize",

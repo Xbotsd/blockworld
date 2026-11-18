@@ -1,10 +1,24 @@
-"""离线大模型客户端：只依赖标准库，默认指向本机。
+"""离线大模型客户端：只依赖标准库，默认指向本机，不绑定任何平台。
 
 支持三种后端，都可用 `make_client()` 构造：
 
-    ollama    http://127.0.0.1:11434             （Ollama）
-    openai    http://127.0.0.1:8080/v1           （llama.cpp / vLLM / LM Studio）
+    ollama    http://127.0.0.1:11434             （Ollama 原生协议）
+    openai    http://127.0.0.1:8080/v1           （任何 OpenAI 兼容端点：
+                                                  llama.cpp server / vLLM /
+                                                  LM Studio / SGLang / …）
     scripted  无网络，按预设回答（测试与演示）
+
+**不依赖平台**：这里没有厂商 SDK、没有账号、没有 API Key 流程、没有云端调用点。
+只要有 HTTP 端点、说话像 Ollama 或 OpenAI，就能接；两者都不是，也可以自己实现
+`LLMClient` 协议后用 `register_client()` 注册。
+
+配置也可以走环境变量，部署时不用改代码：
+
+    BLOCKWORLD_LLM_BACKEND=openai
+    BLOCKWORLD_LLM_BASE_URL=http://127.0.0.1:8080/v1
+    BLOCKWORLD_LLM_MODEL=local
+    BLOCKWORLD_LLM_API_KEY=offline
+    BLOCKWORLD_LLM_TIMEOUT=90
 
 设计约束：
   * 没有网络也能跑——`available()` 为假时上层直接走确定性回退；
@@ -14,12 +28,21 @@
 from __future__ import annotations
 
 import json
+import os
 import urllib.error
 import urllib.request
 from dataclasses import dataclass, field
 from typing import Callable, Protocol
 
 Poster = Callable[[str, dict, dict, float], dict]
+
+ENV = {
+    "backend": "BLOCKWORLD_LLM_BACKEND",
+    "base_url": "BLOCKWORLD_LLM_BASE_URL",
+    "model": "BLOCKWORLD_LLM_MODEL",
+    "api_key": "BLOCKWORLD_LLM_API_KEY",
+    "timeout": "BLOCKWORLD_LLM_TIMEOUT",
+}
 
 
 class LLMClient(Protocol):
@@ -184,15 +207,32 @@ def register_client(name: str, factory) -> None:
     CLIENTS[name] = factory
 
 
-def make_client(kind: str = "ollama", **kwargs) -> LLMClient:
+def make_client(kind: str | None = None, **kwargs) -> LLMClient:
+    """构造客户端；未给的参数依次回落到环境变量与默认值。"""
+    kind = kind or os.environ.get(ENV["backend"], "ollama")
     if kind not in CLIENTS:
         raise KeyError(f"未知后端 {kind!r}；可用：{', '.join(sorted(CLIENTS))}")
     factory = CLIENTS[kind]
     if factory is NullClient:
         return NullClient()
+
+    env = os.environ
+    if kind == "ollama":
+        kwargs.setdefault("model", env.get(ENV["model"], "qwen2.5:7b"))
+        kwargs.setdefault("base_url", env.get(ENV["base_url"], "http://127.0.0.1:11434"))
+    elif kind == "openai":
+        kwargs.setdefault("model", env.get(ENV["model"], "local"))
+        kwargs.setdefault("base_url", env.get(ENV["base_url"], "http://127.0.0.1:8080/v1"))
+        kwargs.setdefault("api_key", env.get(ENV["api_key"], "offline"))
+    if "timeout" not in kwargs and env.get(ENV["timeout"]):
+        try:
+            kwargs["timeout"] = float(env[ENV["timeout"]])
+        except ValueError:
+            pass
     return factory(**kwargs)
 
 
 def describe(client: LLMClient) -> dict:
     return {"backend": client.name, "model": client.model,
-            "available": client.available()}
+            "available": client.available(),
+            "platform": "direct-http (no vendor SDK)"}

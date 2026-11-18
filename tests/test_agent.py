@@ -167,6 +167,46 @@ class TestClients(unittest.TestCase):
             make_client("gpt-in-the-cloud")
 
 
+class TestEnvConfig(unittest.TestCase):
+    def test_env_is_used_when_flags_absent(self):
+        import os
+        from blockworld.agent.llm import ENV, make_client
+
+        old = {k: os.environ.get(v) for k, v in ENV.items()}
+        try:
+            os.environ[ENV["backend"]] = "openai"
+            os.environ[ENV["base_url"]] = "http://10.0.0.5:8080/v1"
+            os.environ[ENV["model"]] = "local-7b"
+            os.environ[ENV["api_key"]] = "offline"
+            os.environ[ENV["timeout"]] = "12"
+            c = make_client()
+            self.assertEqual(c.model, "local-7b")
+            self.assertEqual(c.base_url, "http://10.0.0.5:8080/v1")
+            self.assertEqual(c.api_key, "offline")
+            self.assertAlmostEqual(c.timeout, 12.0)
+        finally:
+            for k, v in old.items():
+                if v is None:
+                    os.environ.pop(ENV[k], None)
+                else:
+                    os.environ[ENV[k]] = v
+
+    def test_flags_override_env(self):
+        import os
+        from blockworld.agent.llm import ENV, make_client
+
+        old = os.environ.get(ENV["model"])
+        try:
+            os.environ[ENV["model"]] = "from-env"
+            c = make_client("ollama", model="from-flag")
+            self.assertEqual(c.model, "from-flag")
+        finally:
+            if old is None:
+                os.environ.pop(ENV["model"], None)
+            else:
+                os.environ[ENV["model"]] = old
+
+
 class TestBrief(unittest.TestCase):
     def test_brief_contains_key_sections(self):
         f = facts()
