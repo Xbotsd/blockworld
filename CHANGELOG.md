@@ -4,6 +4,46 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] — 2026-11-18
+
+Offline advisor: a locally deployed model explains the loop without being able to
+change its verdict.
+
+### Added
+
+- **`blockworld.agent`** — an advisory layer for local models:
+  - `llm.OllamaClient` (`POST /api/chat`, `/api/tags` health check),
+    `OpenAICompatClient` (llama.cpp / vLLM / LM Studio) and `ScriptedClient` /
+    `NullClient` for offline tests; all built on the standard library, no SDK.
+  - `llm.register_client` / `make_client` so a runtime can be swapped by name.
+  - `context.Facts` compresses a `SessionReport` into compact JSON: verdicts,
+    margins, coverage, the tick trace, treatment, model error before/after and
+    the policy thresholds — no raw measurement streams.
+  - `advisor.Advisor` builds the prompt, tolerates fenced or prose-wrapped JSON,
+    validates the schema and clamps confidence.
+  - Deterministic `fallback_advice` for every failure path (no model, timeout,
+    malformed output) so a brief always exists.
+  - `brief.render_brief` writes a Markdown site report with verdicts, timeline,
+    treatments, model correction, risks, recommendations and a disclaimer.
+- **CLI**: `blockworld agent --out DIR [--backend ollama|openai|none]
+  [--model NAME] [--base-url URL] [--list-models]`.
+- **`docs/AGENT.md`**: backend table, guarantees, prompt contract, model hints.
+
+### Guarantees
+
+- `Advice.advisory_only` is `True` by construction; reports are never mutated.
+- A model verdict that contradicts the deterministic action is recorded
+  (`agrees_with_policy=False`) and surfaced, never applied.
+- `source` always names the origin (`llm:...` or `fallback(...)`), so a brief is
+  reproducible after the fact.
+
+### Tests
+
+18 new tests (113 total): JSON parsing (plain, fenced, prose-wrapped, garbage),
+fallback paths, disagreement detection, confidence clamping, fact truncation,
+request payload shape for both backends, registry behaviour, and brief rendering
+including the disagreement and fallback cases.
+
 ## [0.2.0] — 2026-11-18
 
 Robot in the loop: a measured-data path from sensors to decisions.

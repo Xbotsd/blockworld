@@ -145,6 +145,53 @@ def cmd_robot(args) -> int:
     return 0
 
 
+def cmd_agent(args) -> int:
+    from .agent import Advisor, Facts, describe, make_client, render_brief
+    from .robot.demo import make_scenario
+
+    client = make_client(args.backend, model=args.model, base_url=args.base_url,
+                         timeout=args.timeout)
+    info = describe(client)
+
+    if args.list_models:
+        models = client.models() if hasattr(client, "models") else []
+        print(json.dumps({"backend": info["backend"], "available": info["available"],
+                          "models": models}, ensure_ascii=False, indent=2))
+        return 0
+
+    sc = make_scenario(seed=args.seed, session_seed=args.session_seed,
+                       act=not args.no_act)
+    report = sc.session.run(ticks=args.ticks)
+
+    facts = Facts.from_report(report, scenario=sc.narrative)
+    advice = Advisor(client).advise(facts)
+
+    out = Path(args.out)
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "robot_report.json").write_text(
+        json.dumps(report.to_dict(), ensure_ascii=False, indent=2), encoding="utf-8")
+    payload = advice.to_dict()
+    payload["policy_action"] = facts.final.get("action")
+    (out / "agent_advice.json").write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    (out / "agent_brief.md").write_text(
+        render_brief(facts, advice), encoding="utf-8")
+
+    print(f"后端：{info['backend']}/{info['model']}　可用：{info['available']}")
+    print(f"确定性判定：{facts.final.get('action')}　顾问来源：{advice.source}")
+    if advice.verdict and advice.verdict != facts.final.get("action"):
+        print(f"注意：模型意见 {advice.verdict} 与策略不一致，以策略为准")
+    print(f"\n{advice.summary}\n")
+    for title, items in (("风险", advice.risks), ("建议", advice.recommendations),
+                         ("前提", advice.caveats)):
+        if items:
+            print(f"{title}：")
+            for it in items:
+                print(f"  - {it}")
+    print(f"\n输出：{out / 'agent_brief.md'}")
+    return 0
+
+
 def cmd_template(args) -> int:
     files = io.write_site_template(args.dir, nx=args.nx, ny=args.ny, cell=args.cell)
     print(json.dumps({"written": [str(f) for f in files]}, ensure_ascii=False, indent=2))
@@ -187,6 +234,19 @@ def main(argv: list[str] | None = None) -> int:
     r.add_argument("--no-act", action="store_true",
                    help="只给建议，不在模型上执行处理")
     r.set_defaults(func=cmd_robot)
+
+    a = sub.add_parser("agent", help="离线顾问：本地模型解释闭环结果（不参与判定）")
+    a.add_argument("--out", default="out_agent")
+    a.add_argument("--backend", default="ollama", choices=["ollama", "openai", "none"])
+    a.add_argument("--model", default="qwen2.5:7b")
+    a.add_argument("--base-url", default="http://127.0.0.1:11434")
+    a.add_argument("--timeout", type=float, default=90.0)
+    a.add_argument("--ticks", type=int, default=12)
+    a.add_argument("--seed", type=int, default=5)
+    a.add_argument("--session-seed", type=int, default=3)
+    a.add_argument("--no-act", action="store_true")
+    a.add_argument("--list-models", action="store_true")
+    a.set_defaults(func=cmd_agent)
 
     t = sub.add_parser("template", help="生成可编辑的场地数据模板")
     t.add_argument("dir")

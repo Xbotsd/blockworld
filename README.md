@@ -46,6 +46,7 @@ factor induced by the ground improvements (blue = improved).*
 | if you want to… | read |
 |---|---|
 | put a robot in the loop (scan → react → decide) | [`docs/ROBOT.md`](docs/ROBOT.md) |
+| add a local model as an advisor (no network) | [`docs/AGENT.md`](docs/AGENT.md) |
 | understand what the numbers mean and which are trustworthy | [`docs/PROVENANCE.md`](docs/PROVENANCE.md) |
 | use it, command by command | [`docs/GUIDE.md`](docs/GUIDE.md) |
 | see the module boundaries and the data flow | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) |
@@ -59,8 +60,9 @@ pip install -e .
 blockworld template data/site                          # editable dataset
 blockworld study examples/study_landing.json --out out_study --mc 60 --morris 6
 blockworld robot --out out_robot --ticks 12            # closed loop with a robot
+blockworld agent --out out_agent --model qwen2.5:7b    # offline model as advisor
 blockworld demo --out out                              # 48×48 site, ~13 s
-python -m unittest discover -s tests                   # 95 tests
+python -m unittest discover -s tests                   # 113 tests
 ```
 
 ## Robot in the loop
@@ -103,6 +105,37 @@ subsurface evidence only — LiDAR alone cannot certify a bearing capacity.
 Measurements with an implausible value are rejected by a 4σ gate and logged; they
 never enter the twin. `escalate` is a first-class outcome for the case where the
 data cannot separate pass from fail.
+
+## Offline advisor (local model, no network)
+
+The loop above produces evidence and a verdict. A **locally deployed** model can
+turn that into a site brief — risks the criteria did not encode, next actions in
+words, caveats that name the missing measurement. It cannot change the verdict.
+
+```
+SessionReport ──► Facts (compact JSON) ──► local model ──► Advice
+                                   │                        │
+                          unavailable/timeout ──► deterministic fallback
+```
+
+```bash
+blockworld agent --out out_agent --model qwen2.5:7b        # Ollama on :11434
+blockworld agent --backend openai --base-url http://127.0.0.1:8080/v1 --model local
+blockworld agent --backend none                            # force the fallback path
+```
+
+Three guarantees, enforced in code:
+
+1. **No veto** — `Advice.advisory_only` is always `True`; the report is never
+   mutated.
+2. **Disagreement is recorded** — if the model proposes a different verdict, the
+   brief prints both and marks the policy authoritative.
+3. **Fallback always yields a brief** — no model, timeout, or bad JSON produces a
+   deterministic summary from the same facts, tagged `fallback(...)`.
+
+The facts pack carries verdicts, margins, coverage, the tick trace and the model
+error before/after — no raw measurement streams, so a 7B model on a laptop can
+hold it.
 
 ## What it does and does not claim
 
@@ -193,10 +226,11 @@ src/blockworld/     site · io · geology · materials · world · edits
                     hydrology · vegetation · animals · verifiers
                     solvers · api · uncertainty · report · cli
                     robot/ (scan · assimilate · supervisor · session)
-tests/              95 tests (closed-form checks, IO contracts, refusal behaviour)
+                    agent/ (offline advisor: llm · context · advisor · brief)
+tests/              113 tests (closed-form checks, IO contracts, refusal behaviour)
 data/site/          editable template dataset
 examples/           study configuration
-docs/               GUIDE · ARCHITECTURE · PROVENANCE · ROBOT · 使用说明
+docs/               GUIDE · ARCHITECTURE · PROVENANCE · ROBOT · AGENT · 使用说明
 tools/              world diagnostics, README snippet checker
 figures/            generated figures
 ```

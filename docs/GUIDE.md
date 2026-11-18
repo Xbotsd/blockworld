@@ -82,6 +82,22 @@ supervisor prescribes and applies a treatment.
 same file can be replayed with `blockworld study`-style code via
 `make_transport("replay:out/run.jsonl")`. `--no-act` stops at advice.
 
+### `blockworld agent --out DIR [--backend ollama|openai|none] [--model NAME]`
+
+Runs the same closed loop, then asks a **locally deployed** model for a site
+brief. See [`AGENT.md`](AGENT.md).
+
+```bash
+blockworld agent --out out_agent --model qwen2.5:7b           # Ollama
+blockworld agent --backend openai --base-url http://127.0.0.1:8080/v1 --model local
+blockworld agent --backend none                               # deterministic fallback
+```
+
+Outputs `agent_brief.md` (Markdown), `agent_advice.json` and `robot_report.json`.
+The advisor cannot change the verdict: `advice.advisory_only` is always true, and
+a contradicting model verdict is printed next to the policy action marked
+authoritative.
+
 ### `blockworld demo --out DIR`
 
 End-to-end example on a synthetic 48×48 site: build → 55-year vegetation spin-up
