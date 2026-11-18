@@ -45,6 +45,7 @@ factor induced by the ground improvements (blue = improved).*
 
 | if you want to… | read |
 |---|---|
+| put a robot in the loop (scan → react → decide) | [`docs/ROBOT.md`](docs/ROBOT.md) |
 | understand what the numbers mean and which are trustworthy | [`docs/PROVENANCE.md`](docs/PROVENANCE.md) |
 | use it, command by command | [`docs/GUIDE.md`](docs/GUIDE.md) |
 | see the module boundaries and the data flow | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) |
@@ -57,9 +58,51 @@ Sixty seconds:
 pip install -e .
 blockworld template data/site                          # editable dataset
 blockworld study examples/study_landing.json --out out_study --mc 60 --morris 6
+blockworld robot --out out_robot --ticks 12            # closed loop with a robot
 blockworld demo --out out                              # 48×48 site, ~13 s
-python -m unittest discover -s tests                   # 69 tests
+python -m unittest discover -s tests                   # 95 tests
 ```
+
+## Robot in the loop
+
+A static model answers "what would happen if". With a robot attached the question
+becomes "what should it measure next, and what should it do about the answer".
+
+```
+devices (lidar / cpt / probe)  →  assimilator  →  twin  →  verifiers  →  supervisor
+        ▲                        (σ-weighted,       │                       │
+        │                         outlier gate)     │                       ▼
+        └──── transport (loopback / JSONL / TCP) ───┘                  rescan / treat
+                                                                       abort / escalate
+                                                                       certify
+```
+
+Three things are replaceable without touching the rest: the **payload**
+(`register_device`), the **link** (`register_transport`), and the **policy**
+(`Supervisor` / `PolicyConfig`).
+
+```bash
+$ blockworld robot --out out_robot --ticks 12
+
+  t0  测量 11 采纳 11 覆盖率 44%  infrastructure=-1.54  → rescan
+  t3  测量 12 采纳 12 覆盖率 100% infrastructure=-1.54  → treat
+  t4  测量 12 采纳  9 覆盖率 100% infrastructure=+0.38  → certify
+
+先验：clay_soft→clay_stiff　设计：1.5×1.5 m, 400 kN
+最终判断：certify
+模型误差（扫描范围内）先验：c MAE 16.5 kPa, 材料错判 50%
+                      扫描后：c MAE 2.67 kPa, 材料错判 5.6%
+```
+
+The scenario is a real failure mode: an early survey logged a soft clay as stiff,
+so the prior **passes**. The robot scans the foundation footprint, the
+assimilator reclassifies the layer, the verdict **flips**, the supervisor
+prescribes ground replacement and re-certifies after the fix. Coverage counts
+subsurface evidence only — LiDAR alone cannot certify a bearing capacity.
+
+Measurements with an implausible value are rejected by a 4σ gate and logged; they
+never enter the twin. `escalate` is a first-class outcome for the case where the
+data cannot separate pass from fail.
 
 ## What it does and does not claim
 
@@ -149,10 +192,11 @@ it.
 src/blockworld/     site · io · geology · materials · world · edits
                     hydrology · vegetation · animals · verifiers
                     solvers · api · uncertainty · report · cli
-tests/              69 tests (closed-form checks, IO contracts, refusal behaviour)
+                    robot/ (scan · assimilate · supervisor · session)
+tests/              95 tests (closed-form checks, IO contracts, refusal behaviour)
 data/site/          editable template dataset
 examples/           study configuration
-docs/               GUIDE · ARCHITECTURE · PROVENANCE · 使用说明
+docs/               GUIDE · ARCHITECTURE · PROVENANCE · ROBOT · 使用说明
 tools/              world diagnostics, README snippet checker
 figures/            generated figures
 ```

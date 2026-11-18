@@ -4,6 +4,42 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] — 2026-11-18
+
+Robot in the loop: a measured-data path from sensors to decisions.
+
+### Added
+
+- **`blockworld.robot`** — a closed loop that scans, assimilates and decides:
+  - `devices.ScanDevice` protocol with a registry (`register_device`) and four
+    implementations: `SimLiDAR`, `SimCPT`, `SimProbe`, `ReplayDevice`.
+  - `link.Transport` protocol with a registry (`register_transport`) and three
+    implementations: in-process loopback, JSONL recorder and JSONL replayer.
+  - `assimilate.Assimilator`: inverse-variance fusion with a 4σ outlier gate,
+    single-block updates for point measurements, neighbourhood blending for
+    strength, and **material reclassification** when a scan contradicts the log.
+  - `agent.Supervisor`: an explicit six-rule policy returning
+    `rescan / treat / abort / escalate / certify` with reasons and confidence,
+    gated on evidence count and subsurface coverage.
+  - `session.RobotSession`: scan → assimilate → evaluate → decide, with per-tick
+    JSONL events, treatment selection by re-evaluation, optional actuation
+    (`act=True`) that also updates the truth world, and before/after model error.
+  - `robot.demo`: a reproducible scenario in which a soft clay layer was logged as
+    stiff; the prior passes, the scan flips the verdict, the robot prescribes
+    ground replacement and re-certifies after the fix.
+- **CLI**: `blockworld robot --out DIR [--ticks N] [--transport jsonl:path] [--no-act]`.
+- **`docs/ROBOT.md`**: loop diagram, swap points, decision table, hardware
+  adapter example and stated limits.
+- 26 new tests (95 total): device determinism, registry swaps, JSONL round-trip,
+  outlier rejection, reclassification, every policy branch, and an end-to-end
+  scenario asserting that the verdict flips and the model error falls.
+
+### Changed
+
+- `api.evaluate(world, criteria, sites=...)` is now a module-level function; the
+  `Study` method delegates to it so the robot loop and a study share one path.
+- Version bumped to 0.2.0.
+
 ## [0.1.0] — 2026-11-15
 
 First public release.

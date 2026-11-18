@@ -174,25 +174,8 @@ class Study:
     def evaluate(self, world: World, sites: dict, *,
                  criteria: Criteria | None = None,
                  animal_stats: dict | None = None) -> list[V.Verdict]:
-        c = criteria or self.criteria
-        out = []
-        for purpose in c.purposes:
-            fn = solvers.criterion_solver(purpose, _DEFAULT_CRITERIA[purpose])
-            if purpose == "infrastructure":
-                out.append(fn(world, sites["foundation"], c.foundation,
-                              slope_limit=c.slope_limit_deg))
-            elif purpose == "slope":
-                out.append(fn(world, Region.whole(),
-                              fs_required=c.slope_fs_required))
-            elif purpose == "landing":
-                out.append(fn(world, sites["landing"], c.lander))
-            elif purpose == "ecology":
-                out.append(fn(world, Region.whole(), animal_stats=animal_stats,
-                              min_vegetated=c.eco_min_vegetated,
-                              min_biomes=c.eco_min_biomes))
-            else:
-                raise ValueError(f"未知目的 {purpose!r}")
-        return out
+        return evaluate(world, criteria or self.criteria, sites=sites,
+                        animal_stats=animal_stats)
 
     # -- 公开 -----------------------------------------------------------
     def run(self) -> "StudyResult":
@@ -275,6 +258,34 @@ _DEFAULT_CRITERIA = {
     "landing": V.verify_landing,
     "ecology": V.verify_ecology,
 }
+
+
+def evaluate(world: World, criteria: Criteria, *,
+             sites: dict | None = None,
+             animal_stats: dict | None = None) -> list[V.Verdict]:
+    """按判据评估一个世界；不传 sites 时按默认策略选址。"""
+    sites = sites or {
+        "foundation": criteria.foundation_site or choose_foundation_site(world),
+        "landing": criteria.landing_site or choose_landing_site(world),
+    }
+    out = []
+    for purpose in criteria.purposes:
+        fn = solvers.criterion_solver(purpose, _DEFAULT_CRITERIA[purpose])
+        if purpose == "infrastructure":
+            out.append(fn(world, sites["foundation"], criteria.foundation,
+                          slope_limit=criteria.slope_limit_deg))
+        elif purpose == "slope":
+            out.append(fn(world, Region.whole(),
+                          fs_required=criteria.slope_fs_required))
+        elif purpose == "landing":
+            out.append(fn(world, sites["landing"], criteria.lander))
+        elif purpose == "ecology":
+            out.append(fn(world, Region.whole(), animal_stats=animal_stats,
+                          min_vegetated=criteria.eco_min_vegetated,
+                          min_biomes=criteria.eco_min_biomes))
+        else:
+            raise ValueError(f"未知目的 {purpose!r}")
+    return out
 
 
 # ---------------------------------------------------------------------------

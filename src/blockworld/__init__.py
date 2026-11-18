@@ -17,12 +17,13 @@
 """
 
 from . import (animals, api, edits, geology, hydrology, io, materials, pft,
-               report, sensitivity, solvers, uncertainty, vegetation, verifiers)
+               report, robot, sensitivity, solvers, uncertainty, vegetation,
+               verifiers)
 from .api import Criteria, Intervention, Study, StudyResult
 from .site import GridSpec, SiteSpec, build_from, synthesize
 from .world import Cohort, Region, Tile, World, WorldConfig, build
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 __all__ = [
     "SiteSpec", "GridSpec", "build_from", "synthesize",
@@ -31,7 +32,7 @@ __all__ = [
     "monte_carlo", "morris",
     "materials", "pft", "geology", "hydrology", "vegetation", "animals",
     "edits", "verifiers", "sensitivity", "solvers", "uncertainty", "io",
-    "report", "api", "__version__",
+    "report", "api", "robot", "__version__",
 ]
 
 from .uncertainty import Parameter, Distribution, monte_carlo, morris  # noqa: E402

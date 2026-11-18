@@ -107,6 +107,44 @@ def cmd_study(args) -> int:
     return 0
 
 
+def cmd_robot(args) -> int:
+    from .robot import make_transport
+    from .robot.demo import make_scenario
+
+    sc = make_scenario(seed=args.seed, session_seed=args.session_seed,
+                       act=not args.no_act)
+    if args.transport:
+        sc.session.transport = make_transport(args.transport)
+        sc.session.transport.open()
+
+    report = sc.session.run(ticks=args.ticks)
+    out = Path(args.out)
+    out.mkdir(parents=True, exist_ok=True)
+    payload = report.to_dict()
+    payload["narrative"] = sc.narrative
+    (out / "robot_report.json").write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    rows = []
+    for rec in report.ticks:
+        vs = " ".join(f"{v['key']}={v['margin']:+.2f}" for v in rec["verdicts"])
+        rows.append(f"  t{rec['tick']:<2} 测量 {rec['measurements']:>2} "
+                    f"采纳 {rec['accepted']:>2} 覆盖率 {rec['coverage']:.0%}  "
+                    f"{vs}  → {rec['decision']['action']}")
+    print("\n".join(rows))
+    print(f"\n先验：{sc.narrative['prior']}　设计：{sc.narrative['design']}")
+    print(f"最终判断：{report.final.action} — {report.final.reason}")
+    before = report.meta["model_error_before"]
+    at_dec = report.meta.get("model_error_at_decision")
+    print(f"模型误差（扫描范围内）先验：{before}")
+    if at_dec:
+        print(f"                　　　 扫描后（处理前）：{at_dec}")
+    if report.meta.get("acted"):
+        print("　处理过的区块已排除在误差统计外（模型此时本应偏离自然地面）")
+    print(f"\n输出：{out / 'robot_report.json'}")
+    return 0
+
+
 def cmd_template(args) -> int:
     files = io.write_site_template(args.dir, nx=args.nx, ny=args.ny, cell=args.cell)
     print(json.dumps({"written": [str(f) for f in files]}, ensure_ascii=False, indent=2))
@@ -138,6 +176,17 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("--morris", type=int, default=0, help="Morris 轨迹数 r")
     s.add_argument("--criterion", default="landing", help="Morris 排序依据的判据")
     s.set_defaults(func=cmd_study)
+
+    r = sub.add_parser("robot", help="机器人在环：扫描 → 同化 → 自主判断")
+    r.add_argument("--out", default="out_robot")
+    r.add_argument("--ticks", type=int, default=8)
+    r.add_argument("--seed", type=int, default=5, help="场地种子")
+    r.add_argument("--session-seed", type=int, default=3, help="测量噪声种子")
+    r.add_argument("--transport", default="",
+                   help="loopback / jsonl:路径 / replay:路径")
+    r.add_argument("--no-act", action="store_true",
+                   help="只给建议，不在模型上执行处理")
+    r.set_defaults(func=cmd_robot)
 
     t = sub.add_parser("template", help="生成可编辑的场地数据模板")
     t.add_argument("dir")

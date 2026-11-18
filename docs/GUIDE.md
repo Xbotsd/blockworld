@@ -71,6 +71,17 @@ margins and flips. With `--mc` it adds Monte Carlo failure probabilities, with
 
 Output files: `study.json`, and optionally `montecarlo.json`, `morris.json`.
 
+### `blockworld robot --out DIR [--ticks N] [--transport SPEC] [--no-act]`
+
+Runs the closed loop on a reproducible scenario (see [`ROBOT.md`](ROBOT.md)): a
+soft clay layer was logged as stiff, the prior passes, the robot scans the
+foundation footprint, the model is corrected, the verdict flips, and the
+supervisor prescribes and applies a treatment.
+
+`--transport jsonl:out/run.jsonl` records every measurement and decision; the
+same file can be replayed with `blockworld study`-style code via
+`make_transport("replay:out/run.jsonl")`. `--no-act` stops at advice.
+
 ### `blockworld demo --out DIR`
 
 End-to-end example on a synthetic 48×48 site: build → 55-year vegetation spin-up
